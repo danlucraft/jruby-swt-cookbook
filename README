@@ -4,3 +4,12 @@ JRuby SWT Cookbook
 
 JRuby and SWT is a great platform for writing cross-platform desktop applications. This repo contains 
 examples of how to get started.
+
+Getting Started
+---------------
+
+  1. You will need to run these examples with JRuby. Get it from jruby.org.
+  2. You need the correct SWT jar for your platform. Get it from www.eclipse.org/swt. 
+     Take the file called `swt.jar` from the download and put it in the root of this 
+     directory.
+
