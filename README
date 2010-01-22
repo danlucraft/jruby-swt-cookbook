@@ -20,3 +20,11 @@ On Windows and Linux:
 On OSX:
 
   $ jruby -J-XstartOnFirstThread ex1_button/ex1_button.rb
+
+API Docs
+--------
+
+The apidocs.tar.gz file contains SWT API reference docs. Untar the file and open apidocs/index.html in 
+your browser. The comments in all the examples refers to files in these docs. They are the Java api, however
+JRuby does a great job of interfacing with Java, so you can usually just call into them as if they were Ruby 
+classes and methods.
