@@ -17,7 +17,7 @@ class ButtonExample
 
     # Create a button widget (jruby-swt-cookbook/apidocs/org/eclipse/swt/widgets/Button.html)
     button = Swt::Widgets::Button.new(@shell, Swt::SWT::PUSH)
-    button.setText("Click Me")
+    button.set_text("Click Me")
     
     # Add a button click listener
     button.add_selection_listener do
