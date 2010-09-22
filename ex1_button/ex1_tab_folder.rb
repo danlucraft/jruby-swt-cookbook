@@ -30,16 +30,17 @@ class VerticalTabLabel
   def label_image
     display = Swt::Widgets::Display.current
     GraphicsUtils.create_rotated_text(@title, Font, @parent.foreground, @parent.background, Swt::SWT::UP) do |gc, extent|
+      fg, bg = gc.foreground, gc.background
       if @active
-        fg, bg = gc.foreground, gc.background
         gc.foreground = Start_color
         gc.background = End_color
         gc.fill_gradient_rectangle(0, 0, extent.width, extent.height, true)
-        gc.foreground, gc.background = fg, bg
       else
         gc.fill_rectangle(0, 0, extent.width, extent.height)
       end
+      gc.foreground = display.get_system_color(Swt::SWT::COLOR_WIDGET_NORMAL_SHADOW)
       gc.draw_rectangle(0, 0, extent.width - 1, extent.height - 1)
+      gc.foreground, gc.background = fg, bg
     end
   end
   
@@ -94,6 +95,13 @@ class VerticalTabItem
   
   def control= control
     @control = control
+    @control.visible = active?
+    @control.layout_data = Swt::Layout::GridData.new.tap do |l|
+      l.horizontalAlignment = Swt::Layout::GridData::FILL
+      l.verticalAlignment = Swt::Layout::GridData::FILL
+      l.grabExcessHorizontalSpace = true
+      l.exclude = active?
+    end
   end
   
   def draw_label(tab_area)
@@ -108,13 +116,19 @@ class VerticalTabItem
   # This way down to the label
   def active!
     @label.active!
-    @control.visible = true if @control
+    if @control
+      @control.visible = true
+      @control.layout_data.exclude = false
+    end
   end
   
   # This way down to the label
   def inactive!
     @label.inactive!
-    @control.visible = false if @control
+    if @control
+      @control.visible = false
+      @control.layout_data.exclude = true
+    end
   end
 
   def active?
@@ -133,35 +147,24 @@ class VerticalTabFolder < Swt::Widgets::Composite
   
   def initialize(parent, style)
     super(parent, style)
-    set_layout(Swt::Layout::FormLayout.new)
+    self.layout = Swt::Layout::GridLayout.new(2, false).tap do |l|
+      l.horizontalSpacing = -1
+    end
     
     @items = []
     
     @tab_area = Swt::Widgets::Composite.new(self, Swt::SWT::NONE).tap do |t|
-      t.layout_data = Swt::Layout::FormData.new.tap do |f|
-        f.left = Swt::Layout::FormAttachment.new(0, 0)
-        f.top  = Swt::Layout::FormAttachment.new(0, 0)
-        f.bottom = Swt::Layout::FormAttachment.new(0, 100)
-      end
+      t.layout_data = Swt::Layout::GridData.new(Swt::Layout::GridData::FILL_VERTICAL | Swt::Layout::GridData::GRAB_VERTICAL)
       t.layout = Swt::Layout::RowLayout.new.tap do |l|
-        l.type = Swt::SWT::VERTICAL
-        l.spacing = -1
+        l.type         = Swt::SWT::VERTICAL
+        l.spacing      = -1
+        l.wrap         = false
+        l.marginLeft   = 0
+        l.marginRight  = 0
+        l.marginTop    = 0
+        l.marginBottom = 0
       end
     end
-    
-    @content_area = Swt::Widgets::Composite.new(self, Swt::SWT::NONE).tap do |c|
-      c.layout_data = Swt::Layout::FormData.new.tap do |f|
-        f.left  = Swt::Layout::FormAttachment.new(@tabs)
-        f.top   = Swt::Layout::FormAttachment.new(0, 0)
-        f.right = Swt::Layout::FormAttachment.new(100, 0)
-        f.bottom = Swt::Layout::FormAttachment.new(100, 100)
-      end
-      c.layout = Swt::Layout::FillLayout.new
-    end
-  end
-  
-  def getClientArea
-    @content_area.getClientArea
   end
 
   def add_item(tab)
@@ -191,6 +194,7 @@ class VerticalTabFolder < Swt::Widgets::Composite
     else
       tab.active!
     end
+    layout
   end
   
   def selection_index
@@ -234,7 +238,7 @@ class ButtonExample
     @tab_folder = VerticalTabFolder.new(composite, Swt::SWT::TOP)
     @tab_folder.setLayoutData(Swt::Layout::GridData.new(Swt::Layout::GridData::FILL_BOTH));
     @tab_folder.set_size(500,400)
-    items = 2.times.collect do |idx|
+    items = 4.times.collect do |idx|
       i = VerticalTabItem.new(@tab_folder, Swt::SWT::NULL)
       i.text = "Item #{idx}"
       i.control = (Swt::Widgets::Text.new(@tab_folder, (Swt::SWT::BORDER | Swt::SWT::MULTI)).tap do |t|
