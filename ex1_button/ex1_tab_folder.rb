@@ -7,14 +7,12 @@ require File.expand_path(File.join(__FILE__, '../tab_transfer'))
 
 class VerticalTabLabel
   attr_reader :active, :title
+  attr_accessor :font
   
   include Swt::Events::MouseListener
   
-  Font = Swt::Graphics::Font.new(Swt::Widgets::Display.current, "Arial", 12, 0)
-  
   def initialize(tab, parent, style)
     @label = Swt::Widgets::Label.new(parent, style)
-    @tab = tab
     @active = false
     @tab = tab
     @parent = parent
@@ -27,7 +25,7 @@ class VerticalTabLabel
   
   def label_image
     display = Swt::Widgets::Display.current
-    GraphicsUtils.create_rotated_text(@title, Font, @parent.foreground, @parent.background, Swt::SWT::UP) do |gc, extent|
+    GraphicsUtils.create_rotated_text(@title, @font, @parent.foreground, @parent.background, Swt::SWT::UP) do |gc, extent|
       fg, bg = gc.foreground, gc.background
       if @active
         options = @tab.selection_color_options
@@ -137,11 +135,19 @@ class VerticalTabItem
   def selection_color_options
     @parent.selection_color_options
   end
+  
+  def font= swt_font
+    @label.font = swt_font
+  end
+  
+  def font
+    @label.font
+  end
 end
 
 class VerticalTabFolder < Swt::Widgets::Composite
   attr_accessor :tab_area, :content_area
-  attr_reader :selection_color_options
+  attr_reader :selection_color_options, :font
   
   SelectionEvent = Struct.new("Event", :item, :doit)
   
@@ -153,6 +159,7 @@ class VerticalTabFolder < Swt::Widgets::Composite
     
     @items = []
     @selection_listeners = []
+    @font = Swt::Widgets::Display.current.system_font
     
     @tab_area = Swt::Widgets::Composite.new(self, Swt::SWT::NONE).tap do |t|
       t.layout_data = Swt::Layout::GridData.new(Swt::Layout::GridData::FILL_VERTICAL | Swt::Layout::GridData::GRAB_VERTICAL)
@@ -170,13 +177,14 @@ class VerticalTabFolder < Swt::Widgets::Composite
   
   def set_selection_background(colors, percents, vertical = true)
     @selection_color_options = { :colors => colors,
-      :percents => percents.collect {|i| i / 100.0},
+      :percents => percents.collect { |i| i / 100.0 },
       :vertical => vertical }
   end
 
   def add_item(tab)
     @items << tab
     tab.draw_label(@tab_area)
+    tab.font = @font
     tab.active! if @items.size == 1
     layout
   end
@@ -233,6 +241,11 @@ class VerticalTabFolder < Swt::Widgets::Composite
     return @selection_listeners << listener if listener
     raise ArgumentError, "Expected a listener or a block" unless block_given?
     @selection_listeners << Proc.new
+  end
+  
+  def font= swt_font
+    @font = swt_font
+    @items.each { |tab| tab.font = swt_font }
   end
 end
 
