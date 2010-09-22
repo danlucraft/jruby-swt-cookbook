@@ -25,7 +25,8 @@ class VerticalTabLabel
   
   def label_image
     display = Swt::Widgets::Display.current
-    GraphicsUtils.create_rotated_text(@title, @font, @parent.foreground, @parent.background, Swt::SWT::UP) do |gc, extent|
+    @img = nil if @dirty
+    @img ||= GraphicsUtils.create_rotated_text(@title, @font, @parent.foreground, @parent.background, Swt::SWT::UP) do |gc, extent|
       fg, bg = gc.foreground, gc.background
       if @active
         options = @tab.selection_color_options
@@ -47,24 +48,26 @@ class VerticalTabLabel
       gc.draw_rectangle(0, 0, extent.width - 1, extent.height - 1)
       gc.foreground, gc.background = fg, bg
     end
+    @dirty = false
+    @img
   end
   
   def activate
     @tab.activate
   end
   
-  def active!
-    @active = true
-    @label.image = label_image
-  end
-  
-  def inactive!
-    @active = false
-    @label.image = label_image
+  def active= boolean
+    @active = boolean
+    redraw
   end
   
   def title= (str)
     @title = str
+    redraw
+  end
+  
+  def redraw
+    @dirty = true
     @label.image = label_image
   end
   
@@ -110,21 +113,11 @@ class VerticalTabItem
     @parent.selection = self
   end
   
-  # This way down to the label
-  def active!
-    @label.active!
+  def active= boolean
+    @label.active = boolean
     if @control
-      @control.visible = true
-      @control.layout_data.exclude = false
-    end
-  end
-  
-  # This way down to the label
-  def inactive!
-    @label.inactive!
-    if @control
-      @control.visible = false
-      @control.layout_data.exclude = true
+      @control.visible = boolean
+      @control.layout_data.exclude = !boolean
     end
   end
 
@@ -185,7 +178,7 @@ class VerticalTabFolder < Swt::Widgets::Composite
     @items << tab
     tab.draw_label(@tab_area)
     tab.font = @font
-    tab.active! if @items.size == 1
+    tab.active = true if @items.size == 1
     layout
   end
   
@@ -215,11 +208,11 @@ class VerticalTabFolder < Swt::Widgets::Composite
       end
     end
     if evt.doit
-      selection.inactive!
+      selection.active = false
       if tab.respond_to? :to_int
-        @items[tab].active!
+        @items[tab].active = true
       else
-        tab.active!
+        tab.active = true
       end
       layout
     end
