@@ -77,12 +77,6 @@ class VerticalTabLabel
   # Unused
   def mouseDown(e); end
   def mouseDoubleClick(e); end
-  
-  # Delegate to SWT Label
-  def method_missing(method, *args, &block)
-    return @label.send(method, *args, &block) if @label.respond_to? method
-    super
-  end
 end
 
 class VerticalTabItem
@@ -143,12 +137,6 @@ class VerticalTabItem
   def selection_color_options
     @parent.selection_color_options
   end
-
-  # Delegate to label
-  def method_missing(method, *args, &block)
-    return @label.send(method, *args, &block) if @label.respond_to? method
-    super
-  end
 end
 
 class VerticalTabFolder < Swt::Widgets::Composite
@@ -200,7 +188,7 @@ class VerticalTabFolder < Swt::Widgets::Composite
   end
   
   def selection
-    @items.detect { |x| x.active }
+    @items.detect { |x| x.active? }
   end
   
   def selection=(tab)
