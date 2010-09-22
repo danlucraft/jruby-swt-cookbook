@@ -11,8 +11,6 @@ class VerticalTabLabel
   include Swt::Events::MouseListener
   
   Font = Swt::Graphics::Font.new(Swt::Widgets::Display.current, "Arial", 12, 0)
-  Start_color = Swt::Graphics::Color.new(Swt::Widgets::Display.current, 230, 240, 255)
-  End_color = Swt::Graphics::Color.new(Swt::Widgets::Display.current, 135, 178, 247)
   
   def initialize(tab, parent, style)
     @label = Swt::Widgets::Label.new(parent, style)
@@ -32,9 +30,18 @@ class VerticalTabLabel
     GraphicsUtils.create_rotated_text(@title, Font, @parent.foreground, @parent.background, Swt::SWT::UP) do |gc, extent|
       fg, bg = gc.foreground, gc.background
       if @active
-        gc.foreground = Start_color
-        gc.background = End_color
-        gc.fill_gradient_rectangle(0, 0, extent.width, extent.height, true)
+        options = @tab.selection_color_options
+        options[:percents].each_with_index do |p, idx|
+          gc.foreground = options[:colors][idx]
+          gc.background = options[:colors][idx + 1]
+          if options[:vertical]
+            h = idx > 0 ? extent.height * options[:percents][idx - 1] : 0
+            gc.fill_gradient_rectangle(0, h, extent.width, extent.height * p, true)
+          else
+            h = idx > 0 ? extent.width * options[:percents][idx - 1] : 0
+            gc.fill_gradient_rectangle(w, 0, extent.width * p, extent.height, false)
+          end
+        end
       else
         gc.fill_rectangle(0, 0, extent.width, extent.height)
       end
@@ -61,8 +68,6 @@ class VerticalTabLabel
   def title= (str)
     @title = str
     @label.image = label_image
-    @parent.layout
-    @label.redraw
   end
   
   def mouseUp(e)
@@ -135,6 +140,10 @@ class VerticalTabItem
     @label.active
   end
 
+  def selection_color_options
+    @parent.selection_color_options
+  end
+
   # Delegate to label
   def method_missing(method, *args, &block)
     return @label.send(method, *args, &block) if @label.respond_to? method
@@ -144,6 +153,7 @@ end
 
 class VerticalTabFolder < Swt::Widgets::Composite
   attr_accessor :tab_area, :content_area
+  attr_reader :selection_color_options
   
   def initialize(parent, style)
     super(parent, style)
@@ -165,6 +175,12 @@ class VerticalTabFolder < Swt::Widgets::Composite
         l.marginBottom = 0
       end
     end
+  end
+  
+  def set_selection_background(colors, percents, vertical = true)
+    @selection_color_options = { :colors => colors,
+      :percents => percents.collect {|i| i / 100.0},
+      :vertical => vertical }
   end
 
   def add_item(tab)
@@ -238,6 +254,11 @@ class ButtonExample
     @tab_folder = VerticalTabFolder.new(composite, Swt::SWT::TOP)
     @tab_folder.setLayoutData(Swt::Layout::GridData.new(Swt::Layout::GridData::FILL_BOTH));
     @tab_folder.set_size(500,400)
+    colors = [ Swt::Graphics::Color.new(display, 230, 240, 255),
+      Swt::Graphics::Color.new(display, 170, 199, 246),
+      Swt::Graphics::Color.new(display, 135, 178, 247) ]
+    percents = [60, 85]
+    @tab_folder.set_selection_background(colors, percents, true)
     items = 4.times.collect do |idx|
       i = VerticalTabItem.new(@tab_folder, Swt::SWT::NULL)
       i.text = "Item #{idx}"
