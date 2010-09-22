@@ -143,6 +143,8 @@ class VerticalTabFolder < Swt::Widgets::Composite
   attr_accessor :tab_area, :content_area
   attr_reader :selection_color_options
   
+  SelectionEvent = Struct.new("Event", :item, :doit)
+  
   def initialize(parent, style)
     super(parent, style)
     self.layout = Swt::Layout::GridLayout.new(2, false).tap do |l|
@@ -150,6 +152,7 @@ class VerticalTabFolder < Swt::Widgets::Composite
     end
     
     @items = []
+    @selection_listeners = []
     
     @tab_area = Swt::Widgets::Composite.new(self, Swt::SWT::NONE).tap do |t|
       t.layout_data = Swt::Layout::GridData.new(Swt::Layout::GridData::FILL_VERTICAL | Swt::Layout::GridData::GRAB_VERTICAL)
@@ -192,13 +195,26 @@ class VerticalTabFolder < Swt::Widgets::Composite
   end
   
   def selection=(tab)
-    selection.inactive!
-    if tab.respond_to? :to_int
-      @items[tab].active!
-    else
-      tab.active!
+    evt = SelectionEvent.new.tap do |e|
+      e.item = tab
+      e.doit = true
     end
-    layout
+    @selection_listeners.each do |l|
+      if l.respond_to? :call
+        l[evt]
+      else
+        l.widgetSelected(evt)
+      end
+    end
+    if evt.doit
+      selection.inactive!
+      if tab.respond_to? :to_int
+        @items[tab].active!
+      else
+        tab.active!
+      end
+      layout
+    end
   end
   
   def selection_index
@@ -211,6 +227,12 @@ class VerticalTabFolder < Swt::Widgets::Composite
   
   def show_item(tab)
     selection = tab
+  end
+  
+  def add_selection_listener(listener = nil)
+    return @selection_listeners << listener if listener
+    raise ArgumentError, "Expected a listener or a block" unless block_given?
+    @selection_listeners << Proc.new
   end
 end
 
