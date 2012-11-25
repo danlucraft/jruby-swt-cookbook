@@ -10,7 +10,7 @@ module Swt
         'swt/swt_osx'
       end
     when /linux/i
-      if %w(amd64 x84_64).include? Config::CONFIG["host_cpu"]
+      if %w(amd64 x86_64).include? Config::CONFIG["host_cpu"]
         'swt/swt_linux64'
       else
         'swt/swt_linux'
