@@ -73,26 +73,47 @@ module Swt
     import org.eclipse.swt.dnd.Clipboard
     import org.eclipse.swt.dnd.Transfer
     import org.eclipse.swt.dnd.TextTransfer
+
+    import org.eclipse.swt.dnd.DropTarget
+    import org.eclipse.swt.dnd.DropTargetEvent
+    import org.eclipse.swt.dnd.DropTargetListener
+    
+    import org.eclipse.swt.dnd.DragSource
+    import org.eclipse.swt.dnd.DragSourceEvent
+    import org.eclipse.swt.dnd.DragSourceListener
+    import org.eclipse.swt.dnd.DND
+    
+    import org.eclipse.swt.dnd.ByteArrayTransfer
   end
   
   module Layout
     import org.eclipse.swt.layout.FillLayout
+    import org.eclipse.swt.layout.FormAttachment
+    import org.eclipse.swt.layout.FormLayout
+    import org.eclipse.swt.layout.FormData
     import org.eclipse.swt.layout.GridLayout
     import org.eclipse.swt.layout.GridData
     import org.eclipse.swt.layout.RowLayout
     import org.eclipse.swt.layout.RowData
+    import org.eclipse.swt.custom.StackLayout
   end
   
   module Graphics
     import org.eclipse.swt.graphics.Color
     import org.eclipse.swt.graphics.Font
+    import org.eclipse.swt.graphics.FontMetrics
     import org.eclipse.swt.graphics.GC
     import org.eclipse.swt.graphics.Image
+    import org.eclipse.swt.graphics.ImageData
+    import org.eclipse.swt.graphics.Pattern
     import org.eclipse.swt.graphics.Point
+    import org.eclipse.swt.graphics.Rectangle
+    import org.eclipse.swt.graphics.ImageLoader
   end
   
   module Events
     import org.eclipse.swt.events.KeyEvent
+    import org.eclipse.swt.events.MouseListener
   end
   
   import org.eclipse.swt.browser.Browser
